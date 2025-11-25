@@ -1,6 +1,15 @@
 <resources>
 
-    <style name="AppTheme" parent="AppTheme.Base" />
+    <style name="AppTheme" parent="AppTheme.Base">
+        <item name="android:windowAnimationStyle">@style/FastWindowAnimations</item>
+    </style>
+
+    <style name="FastWindowAnimations" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fast_fade_out</item>
+    </style>
 
     <style name="MyButton">
         <item name="android:background">@null</item>

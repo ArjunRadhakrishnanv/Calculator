@@ -7,20 +7,18 @@ import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.fossify.commons.activities.CustomizationActivity
+
 import org.fossify.commons.compose.extensions.enableEdgeToEdgeSimple
 import org.fossify.commons.compose.extensions.onEventValue
 import org.fossify.commons.compose.theme.AppThemeSurface
-import org.fossify.commons.compose.theme.getAppIconIds
-import org.fossify.commons.compose.theme.getAppLauncherName
+
 import org.fossify.commons.extensions.isOrWasThankYouInstalled
 import org.fossify.commons.extensions.launchPurchaseThankYouIntent
-import org.fossify.commons.helpers.APP_ICON_IDS
-import org.fossify.commons.helpers.APP_LAUNCHER_NAME
-import org.fossify.commons.helpers.IS_CUSTOMIZING_COLORS
+
 import org.fossify.commons.helpers.isTiramisuPlus
 import org.fossify.math.compose.SettingsScreen
 import org.fossify.math.extensions.config
@@ -30,8 +28,6 @@ import kotlin.system.exitProcess
 
 class SettingsActivity : AppCompatActivity() {
 
-    private val preferences by lazy { config }
-
     @SuppressLint("NewApi")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,19 +35,15 @@ class SettingsActivity : AppCompatActivity() {
         setContent {
             AppThemeSurface {
                 val context = LocalContext.current
-                val preventPhoneFromSleeping by preferences.preventPhoneFromSleepingFlow
-                    .collectAsStateWithLifecycle(preferences.preventPhoneFromSleeping)
-                val vibrateOnButtonPressFlow by preferences.vibrateOnButtonPressFlow
-                    .collectAsStateWithLifecycle(preferences.vibrateOnButtonPress)
-                val wasUseEnglishToggledFlow by preferences.wasUseEnglishToggledFlow
-                    .collectAsStateWithLifecycle(preferences.wasUseEnglishToggled)
-                val useEnglishFlow by preferences.useEnglishFlow
-                    .collectAsStateWithLifecycle(preferences.useEnglish)
-                val showCheckmarksOnSwitches by config.showCheckmarksOnSwitchesFlow
-                    .collectAsStateWithLifecycle(initialValue = config.showCheckmarksOnSwitches)
-                val isUseEnglishEnabled by remember(wasUseEnglishToggledFlow) {
+                var preventPhoneFromSleeping by remember { mutableStateOf(config.preventPhoneFromSleeping) }
+                var vibrateOnButtonPress by remember { mutableStateOf(config.vibrateOnButtonPress) }
+                val useEnglish = config.useEnglish
+                val wasUseEnglishToggled = config.wasUseEnglishToggled
+                val showCheckmarksOnSwitches = config.showCheckmarksOnSwitches
+
+                val isUseEnglishEnabled by remember {
                     derivedStateOf {
-                        (wasUseEnglishToggledFlow || Locale.getDefault().language != "en") && !isTiramisuPlus()
+                        (wasUseEnglishToggled || Locale.getDefault().language != "en") && !isTiramisuPlus()
                     }
                 }
                 val isOrWasThankYouInstalled = onEventValue {
@@ -61,39 +53,28 @@ class SettingsActivity : AppCompatActivity() {
                 SettingsScreen(
                     displayLanguage = displayLanguage,
                     goBack = ::finish,
-                    customizeColors = ::startCustomizationActivity,
-                    customizeWidgetColors = ::setupCustomizeWidgetColors,
                     preventPhoneFromSleeping = preventPhoneFromSleeping,
-                    onPreventPhoneFromSleeping = preferences::preventPhoneFromSleeping::set,
-                    vibrateOnButtonPressFlow = vibrateOnButtonPressFlow,
-                    onVibrateOnButtonPressFlow = preferences::vibrateOnButtonPress::set,
+                    onPreventPhoneFromSleeping = {
+                        config.preventPhoneFromSleeping = it
+                        preventPhoneFromSleeping = it
+                    },
+                    vibrateOnButtonPressFlow = vibrateOnButtonPress,
+                    onVibrateOnButtonPressFlow = {
+                        config.vibrateOnButtonPress = it
+                        vibrateOnButtonPress = it
+                    },
                     isOrWasThankYouInstalled = isOrWasThankYouInstalled,
                     onThankYou = ::launchPurchaseThankYouIntent,
                     isUseEnglishEnabled = isUseEnglishEnabled,
-                    isUseEnglishChecked = useEnglishFlow,
+                    isUseEnglishChecked = useEnglish,
                     onUseEnglishPress = { isChecked ->
-                        preferences.useEnglish = isChecked
+                        config.useEnglish = isChecked
                         exitProcess(0)
                     },
                     onSetupLanguagePress = ::launchChangeAppLanguageIntent,
                     showCheckmarksOnSwitches = showCheckmarksOnSwitches,
                 )
             }
-        }
-    }
-
-    private fun startCustomizationActivity() {
-        Intent(applicationContext, CustomizationActivity::class.java).apply {
-            putExtra(APP_ICON_IDS, getAppIconIds())
-            putExtra(APP_LAUNCHER_NAME, getAppLauncherName())
-            startActivity(this)
-        }
-    }
-
-    private fun setupCustomizeWidgetColors() {
-        Intent(this, WidgetConfigureActivity::class.java).apply {
-            putExtra(IS_CUSTOMIZING_COLORS, true)
-            startActivity(this)
         }
     }
 }

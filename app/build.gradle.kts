@@ -33,10 +33,11 @@ android {
         targetSdk = project.libs.versions.app.build.targetSDK.get().toInt()
         versionName = project.property("VERSION_NAME").toString()
         versionCode = project.property("VERSION_CODE").toString().toInt()
-        setProperty("archivesBaseName", "calculator-$versionCode")
+        setProperty("archivesBaseName", "simple-$versionCode")
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas")
         }
+        resConfigs("en", "xxhdpi")
     }
 
     signingConfigs {
@@ -84,9 +85,7 @@ android {
 
     flavorDimensions.add("variants")
     productFlavors {
-        register("core")
         register("foss")
-        register("gplay")
     }
 
     compileOptions {
@@ -151,7 +150,6 @@ detekt {
 dependencies {
     implementation(libs.fossify.commons)
     implementation(libs.auto.fit.text.view)
-    implementation(libs.evalex)
     implementation(libs.bundles.lifecycle)
     implementation(libs.bundles.compose)
     debugImplementation(libs.bundles.compose.preview)

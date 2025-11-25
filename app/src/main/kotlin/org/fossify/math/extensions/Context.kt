@@ -1,6 +1,5 @@
 package org.fossify.math.extensions
 
-import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -19,7 +18,6 @@ import org.fossify.commons.extensions.lightenColor
 import org.fossify.commons.extensions.showErrorToast
 import org.fossify.math.databases.CalculatorDatabase
 import org.fossify.math.helpers.Config
-import org.fossify.math.helpers.MyWidgetProvider
 import org.fossify.math.interfaces.CalculatorDao
 
 val Context.config: Config get() = Config.newInstance(applicationContext)
@@ -40,18 +38,7 @@ fun Context.updateViewColors(viewGroup: ViewGroup, textColor: Int) {
         }
 }
 
-fun Context.updateWidgets() {
-    val widgetIDs = AppWidgetManager.getInstance(applicationContext)
-        ?.getAppWidgetIds(ComponentName(applicationContext, MyWidgetProvider::class.java))
-        ?: return
-    if (widgetIDs.isNotEmpty()) {
-        Intent(applicationContext, MyWidgetProvider::class.java).apply {
-            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIDs)
-            sendBroadcast(this)
-        }
-    }
-}
+
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 fun Context.launchChangeAppLanguageIntent() {

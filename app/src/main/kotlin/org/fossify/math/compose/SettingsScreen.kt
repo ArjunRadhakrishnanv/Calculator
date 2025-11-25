@@ -15,13 +15,11 @@ import org.fossify.commons.compose.settings.SettingsTitleTextComponent
 import org.fossify.commons.compose.theme.AppThemeSurface
 import org.fossify.commons.compose.theme.divider_grey
 import org.fossify.commons.helpers.isTiramisuPlus
-import org.fossify.math.R
+import org.fossify.math.simple.R
 
 @Composable
 internal fun SettingsScreen(
     goBack: () -> Unit,
-    customizeColors: () -> Unit,
-    customizeWidgetColors: () -> Unit,
     preventPhoneFromSleeping: Boolean,
     onPreventPhoneFromSleeping: (Boolean) -> Unit,
     vibrateOnButtonPressFlow: Boolean,
@@ -39,22 +37,6 @@ internal fun SettingsScreen(
         title = stringResource(id = org.fossify.commons.R.string.settings),
         goBack = goBack
     ) {
-        SettingsGroup(title = {
-            SettingsTitleTextComponent(text = stringResource(id = org.fossify.commons.R.string.color_customization))
-        }) {
-            SettingsPreferenceComponent(
-                label = stringResource(id = org.fossify.commons.R.string.customize_colors),
-                doOnPreferenceClick = {
-                    customizeColors()
-                },
-                preferenceLabelColor = MaterialTheme.colorScheme.onSurface
-            )
-            SettingsPreferenceComponent(
-                label = stringResource(id = org.fossify.commons.R.string.customize_widget_colors),
-                doOnPreferenceClick = customizeWidgetColors
-            )
-        }
-        HorizontalDivider(color = divider_grey)
         SettingsGroup(title = {
             SettingsTitleTextComponent(text = stringResource(id = org.fossify.commons.R.string.general_settings))
         }) {
@@ -103,8 +85,6 @@ private fun SettingsScreenPreview(
     AppThemeSurface {
         SettingsScreen(
             goBack = {},
-            customizeColors = {},
-            customizeWidgetColors = {},
             preventPhoneFromSleeping = false,
             onPreventPhoneFromSleeping = {},
             vibrateOnButtonPressFlow = false,

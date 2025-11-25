@@ -3,8 +3,11 @@ package org.fossify.math.activities
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.TextView
 import androidx.core.content.res.ResourcesCompat
 import me.grantland.widget.AutofitHelper
 import org.fossify.commons.extensions.appLaunched
@@ -18,14 +21,13 @@ import org.fossify.commons.extensions.value
 import org.fossify.commons.extensions.viewBinding
 import org.fossify.commons.helpers.APP_ICON_IDS
 import org.fossify.commons.helpers.LICENSE_AUTOFITTEXTVIEW
-import org.fossify.commons.helpers.LICENSE_EVALEX
 import org.fossify.commons.helpers.LOWER_ALPHA_INT
 import org.fossify.commons.helpers.MEDIUM_ALPHA_INT
 import org.fossify.commons.models.FAQItem
-import org.fossify.math.BuildConfig
-import org.fossify.math.R
+import org.fossify.math.simple.BuildConfig
+import org.fossify.math.simple.R
 import org.fossify.math.databases.CalculatorDatabase
-import org.fossify.math.databinding.ActivityMainBinding
+import org.fossify.math.simple.databinding.ActivityMainBinding
 import org.fossify.math.dialogs.HistoryDialog
 import org.fossify.math.extensions.config
 import org.fossify.math.extensions.updateViewColors
@@ -38,8 +40,6 @@ import org.fossify.math.helpers.MINUS
 import org.fossify.math.helpers.MULTIPLY
 import org.fossify.math.helpers.PERCENT
 import org.fossify.math.helpers.PLUS
-import org.fossify.math.helpers.POWER
-import org.fossify.math.helpers.ROOT
 import org.fossify.math.helpers.getDecimalSeparator
 
 class MainActivity : SimpleActivity(), Calculator {
@@ -54,10 +54,10 @@ class MainActivity : SimpleActivity(), Calculator {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         appLaunched(BuildConfig.APPLICATION_ID)
-        setupOptionsMenu()
-        refreshMenuItems()
         setupEdgeToEdge(padBottomSystem = listOf(binding.mainNestedScrollview))
         setupMaterialScrollListener(binding.mainNestedScrollview, binding.mainAppbar!!)
+        setSupportActionBar(binding.mainToolbar)
+        supportActionBar?.setDisplayShowTitleEnabled(false)
 
         if (savedInstanceState != null) {
             saveCalculatorState = savedInstanceState.getCharSequence(CALCULATOR_STATE) as String
@@ -73,8 +73,8 @@ class MainActivity : SimpleActivity(), Calculator {
         binding.btnMultiply?.setOnClickOperation(MULTIPLY)
         binding.btnDivide?.setOnClickOperation(DIVIDE)
         binding.btnPercent?.setOnClickOperation(PERCENT)
-        binding.btnPower?.setOnClickOperation(POWER)
-        binding.btnRoot?.setOnClickOperation(ROOT)
+        binding.root.findViewById<TextView>(R.id.btn_open_parenthesis).setVibratingOnClickListener { calc.appendOpenParenthesis() }
+        binding.root.findViewById<TextView>(R.id.btn_close_parenthesis).setVibratingOnClickListener { calc.appendCloseParenthesis() }
         binding.btnMinus?.setOnLongClickListener { calc.turnToNegative() }
         binding.btnClear?.setVibratingOnClickListener { calc.handleClear() }
         binding.btnClear?.setOnLongClickListener {
@@ -94,7 +94,6 @@ class MainActivity : SimpleActivity(), Calculator {
         AutofitHelper.create(binding.result)
         AutofitHelper.create(binding.formula)
         storeStateVariables()
-        binding.calculatorHolder?.let { updateViewColors(it, getProperTextColor()) }
         setupDecimalButton()
         checkAppOnSDCard()
     }
@@ -103,9 +102,6 @@ class MainActivity : SimpleActivity(), Calculator {
         super.onResume()
         setupTopAppBar(binding.mainAppbar!!)
         setupMaterialScrollListener(binding.mainNestedScrollview, binding.mainAppbar)
-        if (storedTextColor != config.textColor) {
-            binding.calculatorHolder?.let { updateViewColors(it, getProperTextColor()) }
-        }
 
         if (config.preventPhoneFromSleeping) {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -114,22 +110,44 @@ class MainActivity : SimpleActivity(), Calculator {
         setupDecimalButton()
         vibrateOnButtonPress = config.vibrateOnButtonPress
 
+        val white = android.graphics.Color.WHITE
+        val black = android.graphics.Color.BLACK
+        val red = android.graphics.Color.RED
+        val darkGrey = android.graphics.Color.DKGRAY
+
+        binding.mainToolbar?.setBackgroundColor(black)
+        binding.result?.setTextColor(white)
+        binding.formula?.setTextColor(white)
+
+        val btnOpen = binding.root.findViewById<TextView>(R.id.btn_open_parenthesis)
+        val btnClose = binding.root.findViewById<TextView>(R.id.btn_close_parenthesis)
+
         binding.apply {
-            arrayOf(
-                btnPercent, btnPower, btnRoot, btnClear, btnReset, btnDivide, btnMultiply, btnPlus,
-                btnMinus, btnEquals, btnDecimal
-            ).forEach {
+            // Clear Buttons (White bg, Red text)
+            arrayOf(btnClear, btnReset).forEach {
                 it?.background = ResourcesCompat.getDrawable(
-                    resources, org.fossify.commons.R.drawable.pill_background, theme
+                    resources, R.drawable.ripple_white_bg, theme
                 )
-                it?.background?.alpha = MEDIUM_ALPHA_INT
+                it?.setTextColor(red)
             }
 
-            arrayOf(btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9).forEach {
+            // Operators (White bg, Black text)
+            arrayOf(
+                btnPercent, btnOpen, btnClose, btnDivide, btnMultiply, btnPlus,
+                btnMinus, btnEquals
+            ).forEach {
                 it?.background = ResourcesCompat.getDrawable(
-                    resources, org.fossify.commons.R.drawable.pill_background, theme
+                    resources, R.drawable.ripple_white_bg, theme
                 )
-                it?.background?.alpha = LOWER_ALPHA_INT
+                it?.setTextColor(black)
+            }
+
+            // Numbers (Dark Grey bg, White text)
+            arrayOf(btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9, btnDecimal).forEach {
+                it?.background = ResourcesCompat.getDrawable(
+                    resources, R.drawable.ripple_dark_grey_bg, theme
+                )
+                it?.setTextColor(white)
             }
         }
     }
@@ -154,27 +172,6 @@ class MainActivity : SimpleActivity(), Calculator {
         bundle.putString(CALCULATOR_STATE, calc.getCalculatorStateJson().toString())
     }
 
-    private fun setupOptionsMenu() {
-        binding.mainToolbar.setOnMenuItemClickListener { menuItem ->
-            when (menuItem.itemId) {
-                R.id.history -> showHistory()
-                R.id.more_apps_from_us -> launchMoreAppsFromUsIntent()
-                R.id.unit_converter -> launchUnitConverter()
-                R.id.settings -> launchSettings()
-                R.id.about -> launchAbout()
-                else -> return@setOnMenuItemClickListener false
-            }
-            return@setOnMenuItemClickListener true
-        }
-    }
-
-    private fun refreshMenuItems() {
-        binding.mainToolbar.menu.apply {
-            findItem(R.id.more_apps_from_us).isVisible =
-                !resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)
-        }
-    }
-
     private fun storeStateVariables() {
         config.apply {
             storedTextColor = textColor
@@ -197,59 +194,6 @@ class MainActivity : SimpleActivity(), Calculator {
         }
     }
 
-    private fun launchUnitConverter() {
-        hideKeyboard()
-        startActivity(Intent(applicationContext, UnitConverterPickerActivity::class.java))
-    }
-
-    private fun launchSettings() {
-        hideKeyboard()
-        startActivity(
-            Intent(applicationContext, SettingsActivity::class.java).apply {
-                putIntegerArrayListExtra(APP_ICON_IDS, getAppIconIDs())
-            }
-        )
-    }
-
-    private fun launchAbout() {
-        val licenses = LICENSE_AUTOFITTEXTVIEW or LICENSE_EVALEX
-
-        val faqItems = arrayListOf(
-            FAQItem(R.string.faq_1_title, R.string.faq_1_text),
-            FAQItem(
-                title = org.fossify.commons.R.string.faq_1_title_commons,
-                text = org.fossify.commons.R.string.faq_1_text_commons
-            ),
-            FAQItem(
-                title = org.fossify.commons.R.string.faq_4_title_commons,
-                text = org.fossify.commons.R.string.faq_4_text_commons
-            )
-        )
-
-        if (!resources.getBoolean(org.fossify.commons.R.bool.hide_google_relations)) {
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_2_title_commons,
-                    text = org.fossify.commons.R.string.faq_2_text_commons
-                )
-            )
-            faqItems.add(
-                FAQItem(
-                    title = org.fossify.commons.R.string.faq_6_title_commons,
-                    text = org.fossify.commons.R.string.faq_6_text_commons
-                )
-            )
-        }
-
-        startAboutActivity(
-            appNameId = R.string.app_name,
-            licenseMask = licenses,
-            versionName = BuildConfig.VERSION_NAME,
-            faqItems = faqItems,
-            showFAQBeforeMail = true
-        )
-    }
-
     private fun getButtonIds() = binding.run {
         arrayOf(btnDecimal, btn0, btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8, btn9)
     }
@@ -266,6 +210,22 @@ class MainActivity : SimpleActivity(), Calculator {
             copyToClipboard(value)
             true
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        menu?.findItem(R.id.history)?.icon?.setTint(android.graphics.Color.WHITE)
+        menu?.findItem(R.id.settings)?.icon?.setTint(android.graphics.Color.WHITE)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.settings -> startActivity(Intent(applicationContext, SettingsActivity::class.java))
+            R.id.history -> showHistory()
+            else -> return super.onOptionsItemSelected(item)
+        }
+        return true
     }
 
     override fun showNewResult(value: String, context: Context) {
