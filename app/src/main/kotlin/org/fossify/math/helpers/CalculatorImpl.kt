@@ -166,7 +166,11 @@ class CalculatorImpl(
             openParenthesesCount--
         }
 
-        val expression = tempFormula.replace("×", "*").replace("÷", "/")
+        val expression = tempFormula
+            .replace(groupingSeparator, "")
+            .replace(decimalSeparator, ".")
+            .replace("×", "*")
+            .replace("÷", "/")
 
         try {
             val result = evaluateExpression(expression)

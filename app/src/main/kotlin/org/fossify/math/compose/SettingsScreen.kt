@@ -46,21 +46,22 @@ internal fun SettingsScreen(
                     doOnPreferenceClick = onThankYou,
                 )
             }
-            if (isUseEnglishEnabled) {
-                SettingsSwitchComponent(
-                    label = stringResource(id = org.fossify.commons.R.string.use_english_language),
-                    initialValue = isUseEnglishChecked,
-                    onChange = onUseEnglishPress,
-                    showCheckmark = showCheckmarksOnSwitches
-                )
-            }
-            if (isTiramisuPlus()) {
-                SettingsPreferenceComponent(
-                    label = stringResource(id = org.fossify.commons.R.string.language),
-                    value = displayLanguage,
-                    doOnPreferenceClick = onSetupLanguagePress,
-                )
-            }
+            // Removed language selection options as per user request
+            // if (isUseEnglishEnabled) {
+            //     SettingsSwitchComponent(
+            //         label = stringResource(id = org.fossify.commons.R.string.use_english_language),
+            //         initialValue = isUseEnglishChecked,
+            //         onChange = onUseEnglishPress,
+            //         showCheckmark = showCheckmarksOnSwitches
+            //     )
+            // }
+            // if (isTiramisuPlus()) {
+            //     SettingsPreferenceComponent(
+            //         label = stringResource(id = org.fossify.commons.R.string.language),
+            //         value = displayLanguage,
+            //         doOnPreferenceClick = onSetupLanguagePress,
+            //     )
+            // }
             SettingsSwitchComponent(
                 label = stringResource(id = R.string.vibrate_on_button_press),
                 initialValue = vibrateOnButtonPressFlow,

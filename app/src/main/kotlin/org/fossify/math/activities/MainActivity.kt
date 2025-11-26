@@ -115,6 +115,8 @@ class MainActivity : SimpleActivity(), Calculator {
         val red = android.graphics.Color.RED
         val darkGrey = android.graphics.Color.DKGRAY
 
+        window.statusBarColor = black
+        binding.root.setBackgroundColor(black)
         binding.mainToolbar?.setBackgroundColor(black)
         binding.result?.setTextColor(white)
         binding.formula?.setTextColor(white)

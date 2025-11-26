@@ -19,6 +19,7 @@ class HistoryDialog(activity: SimpleActivity, items: List<History>, calculator: 
     init {
 
         val view = DialogHistoryBinding.inflate(activity.layoutInflater, null, false)
+        view.root.setBackgroundColor(android.graphics.Color.BLACK)
 
         activity.getAlertDialogBuilder()
             .setPositiveButton(org.fossify.commons.R.string.ok, null)
@@ -30,6 +31,7 @@ class HistoryDialog(activity: SimpleActivity, items: List<History>, calculator: 
             }.apply {
                 activity.setupDialogStuff(view.root, this, R.string.history) { alertDialog ->
                     dialog = alertDialog
+                    dialog?.window?.decorView?.setBackgroundColor(android.graphics.Color.BLACK)
                 }
             }
 
